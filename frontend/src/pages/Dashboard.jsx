@@ -32,8 +32,8 @@ const Dashboard = () => {
             <ListChecks size={32} />
           </div>
           <div>
-            <p className="form-label" style={{ marginBottom: '4px' }}>Total Tasks</p>
-            <h2 style={{ fontSize: '2rem' }}>{stats.total}</h2>
+            <p className="form-label" style={{ marginBottom: '4px' }}>My Total Tasks</p>
+            <h2 style={{ fontSize: '2rem' }}>{stats.myTasks.total}</h2>
           </div>
         </div>
         <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -42,7 +42,7 @@ const Dashboard = () => {
           </div>
           <div>
             <p className="form-label" style={{ marginBottom: '4px' }}>Completed</p>
-            <h2 style={{ fontSize: '2rem' }}>{stats.completed}</h2>
+            <h2 style={{ fontSize: '2rem' }}>{stats.myTasks.completed}</h2>
           </div>
         </div>
         <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -51,7 +51,7 @@ const Dashboard = () => {
           </div>
           <div>
             <p className="form-label" style={{ marginBottom: '4px' }}>Pending</p>
-            <h2 style={{ fontSize: '2rem' }}>{stats.pending}</h2>
+            <h2 style={{ fontSize: '2rem' }}>{stats.myTasks.pending}</h2>
           </div>
         </div>
       </div>
@@ -59,10 +59,12 @@ const Dashboard = () => {
       <div className="grid-3">
         <div className="glass-card" style={{ gridColumn: 'span 2' }}>
           <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Activity size={20} /> Tasks by Category
+            <Activity size={20} /> All Project Tasks by Category
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {Object.entries(stats.byCategory).map(([category, count]) => (
+            {Object.entries(stats.allTasksByCategory).map(([category, count]) => {
+              const totalAll = Object.values(stats.allTasksByCategory).reduce((a,b)=>a+b, 0);
+              return (
               <div key={category}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span>{category}</span>
@@ -72,11 +74,11 @@ const Dashboard = () => {
                   <div style={{ 
                     height: '100%', 
                     background: category === 'Coding' ? 'var(--primary)' : category === 'UI Design' ? 'var(--warning)' : 'var(--success)', 
-                    width: `${stats.total ? (count / stats.total) * 100 : 0}%` 
+                    width: `${totalAll ? (count / totalAll) * 100 : 0}%` 
                   }}></div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </div>
