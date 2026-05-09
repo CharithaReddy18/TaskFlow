@@ -112,76 +112,86 @@ const Projects = () => {
 
         {/* Task & Member List */}
         <div className="glass-card" style={{ gridColumn: 'span 2' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3>Tasks {selectedProjObj && `- ${selectedProjObj.name}`}</h3>
-            {selectedProjObj?.myRole === 'ADMIN' && (
-              <button className="btn btn-secondary" onClick={() => setIsTaskModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px' }}>
-                <Plus size={16} /> Add Task
-              </button>
-            )}
-          </div>
-          
-          {selectedProjObj?.myRole === 'ADMIN' && (
-            <div style={{ marginBottom: '24px', background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '8px' }}>
-              <h4 style={{ marginBottom: '12px' }}>Project Members</h4>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                <select className="form-select" style={{ padding: '6px', fontSize: '14px' }} value={newMemberId} onChange={e => setNewMemberId(e.target.value)}>
-                  <option value="">Select a user to invite...</option>
-                  {users.map(u => <option key={u._id} value={u._id}>{u.name} ({u.email})</option>)}
-                </select>
-                <button className="btn btn-secondary" onClick={handleAddMember}>Invite</button>
+          {!selectedProject ? (
+             <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+               <Users size={48} style={{ marginBottom: '16px', opacity: 0.5, margin: '0 auto' }} />
+               <h3>No Project Selected</h3>
+               <p style={{ marginTop: '8px' }}>Please select a project from the left panel to view tasks, invite members, and manage your team.</p>
+             </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h3>Tasks {selectedProjObj && `- ${selectedProjObj.name}`}</h3>
+                {selectedProjObj?.myRole === 'ADMIN' && (
+                  <button className="btn btn-secondary" onClick={() => setIsTaskModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px' }}>
+                    <Plus size={16} /> Add Task
+                  </button>
+                )}
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {members.map(m => (
-                  <span key={m._id} style={{ background: 'var(--primary)', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>
-                    {m.user?.name} ({m.role})
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+              
+              {selectedProjObj?.myRole === 'ADMIN' && (
+                <div style={{ marginBottom: '24px', background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '8px' }}>
+                  <h4 style={{ marginBottom: '12px' }}>Project Members</h4>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                    <select className="form-select" style={{ padding: '6px', fontSize: '14px' }} value={newMemberId} onChange={e => setNewMemberId(e.target.value)}>
+                      <option value="">Select a user to invite...</option>
+                      {users.map(u => <option key={u._id} value={u._id}>{u.name} ({u.email})</option>)}
+                    </select>
+                    <button className="btn btn-secondary" onClick={handleAddMember}>Invite</button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {members.map(m => (
+                      <span key={m._id} style={{ background: 'var(--primary)', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>
+                        {m.user?.name} ({m.role})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {tasks
-              .filter(t => selectedProject ? t.projectId?._id === selectedProject : true)
-              .map(t => (
-              <div key={t._id} style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                    <h4 style={{ fontSize: '16px' }}>{t.title}</h4>
-                    <span className={`badge ${getStatusClass(t.status)}`}>{t.status}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {tasks
+                  .filter(t => selectedProject ? t.projectId?._id === selectedProject : true)
+                  .map(t => (
+                  <div key={t._id} style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                        <h4 style={{ fontSize: '16px' }}>{t.title}</h4>
+                        <span className={`badge ${getStatusClass(t.status)}`}>{t.status}</span>
+                      </div>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '12px' }}>{t.description}</p>
+                      <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                        <span>Category: {t.category}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Users size={14} /> {t.assigneeId?.name || 'Unassigned'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Status Update Actions */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <select 
+                        className="form-select" 
+                        value={t.status} 
+                        onChange={(e) => handleUpdateTaskStatus(t._id, e.target.value)}
+                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                        disabled={selectedProjObj?.myRole === 'MEMBER' && t.assigneeId?._id !== user._id}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    </div>
                   </div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '12px' }}>{t.description}</p>
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                    <span>Category: {t.category}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Users size={14} /> {t.assigneeId?.name || 'Unassigned'}
-                    </span>
+                ))}
+                {tasks.filter(t => selectedProject ? t.projectId?._id === selectedProject : true).length === 0 && (
+                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
+                    No tasks to display. Select a project or create a new task.
                   </div>
-                </div>
-                
-                {/* Status Update Actions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <select 
-                    className="form-select" 
-                    value={t.status} 
-                    onChange={(e) => handleUpdateTaskStatus(t._id, e.target.value)}
-                    style={{ padding: '6px 12px', fontSize: '12px' }}
-                    disabled={selectedProjObj?.myRole === 'MEMBER' && t.assigneeId?._id !== user._id}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="in progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
+                )}
               </div>
-            ))}
-            {tasks.filter(t => selectedProject ? t.projectId?._id === selectedProject : true).length === 0 && (
-              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
-                No tasks to display. Select a project or create a new task.
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
 

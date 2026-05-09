@@ -14,10 +14,11 @@ router.get('/', protect, async (req, res) => {
     });
     // Extract projects and inject the user's role in that project
     const projects = memberships.map(m => {
+      if (!m.project) return null;
       const p = m.project.toObject();
       p.myRole = m.role;
       return p;
-    });
+    }).filter(Boolean);
     res.json(projects);
   } catch (error) {
     res.status(500).json({ message: error.message });
