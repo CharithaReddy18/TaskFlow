@@ -5,6 +5,7 @@ const taskSchema = new mongoose.Schema({
   description: { type: String },
   category: { type: String, enum: ['User Research', 'UI Design', 'Coding'], required: true },
   status: { type: String, enum: ['pending', 'in progress', 'completed'], default: 'pending' },
+  priority: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH'], default: 'MEDIUM' },
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
   assigneeId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   dueDate: { type: Date }

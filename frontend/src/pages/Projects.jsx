@@ -13,6 +13,8 @@ const Projects = () => {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [newMemberId, setNewMemberId] = useState('');
 
   const fetchData = async () => {
     try {
@@ -21,14 +23,25 @@ const Projects = () => {
       const taskRes = await api.get('/tasks');
       setTasks(taskRes.data);
       
-      if (user.role === 'ADMIN') {
-        const usersRes = await api.get('/auth/users');
-        setUsers(usersRes.data);
-      }
+      const usersRes = await api.get('/auth/users');
+      setUsers(usersRes.data);
     } catch (err) {
       console.error(err);
     }
   };
+
+  const fetchProjectDetails = async (id) => {
+    try {
+      const res = await api.get(`/projects/${id}`);
+      setMembers(res.data.members || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedProject) fetchProjectDetails(selectedProject);
+  }, [selectedProject]);
 
   useEffect(() => {
     fetchData();
@@ -47,6 +60,18 @@ const Projects = () => {
     return status.replace(' ', '');
   };
 
+  const handleAddMember = async () => {
+    try {
+      await api.post(`/projects/${selectedProject}/members`, { userId: newMemberId, role: 'MEMBER' });
+      fetchProjectDetails(selectedProject);
+      setNewMemberId('');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error adding member');
+    }
+  };
+
+  const selectedProjObj = projects.find(p => p._id === selectedProject);
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -54,11 +79,9 @@ const Projects = () => {
           <h1 style={{ marginBottom: '8px' }}>Projects & Tasks</h1>
           <p style={{ color: 'var(--text-muted)' }}>Manage your work and team assignments.</p>
         </div>
-        {user.role === 'ADMIN' && (
-          <button className="btn btn-primary" onClick={() => setIsProjectModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Plus size={18} /> New Project
-          </button>
-        )}
+        <button className="btn btn-primary" onClick={() => setIsProjectModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Plus size={18} /> New Project
+        </button>
       </div>
 
       <div className="grid-3">
@@ -87,17 +110,37 @@ const Projects = () => {
           </div>
         </div>
 
-        {/* Task List */}
+        {/* Task & Member List */}
         <div className="glass-card" style={{ gridColumn: 'span 2' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3>Tasks {selectedProject && `- ${projects.find(p=>p._id===selectedProject)?.name}`}</h3>
-            {user.role === 'ADMIN' && selectedProject && (
+            <h3>Tasks {selectedProjObj && `- ${selectedProjObj.name}`}</h3>
+            {selectedProjObj?.myRole === 'ADMIN' && (
               <button className="btn btn-secondary" onClick={() => setIsTaskModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px' }}>
                 <Plus size={16} /> Add Task
               </button>
             )}
           </div>
           
+          {selectedProjObj?.myRole === 'ADMIN' && (
+            <div style={{ marginBottom: '24px', background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '8px' }}>
+              <h4 style={{ marginBottom: '12px' }}>Project Members</h4>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                <select className="form-select" style={{ padding: '6px', fontSize: '14px' }} value={newMemberId} onChange={e => setNewMemberId(e.target.value)}>
+                  <option value="">Select a user to invite...</option>
+                  {users.map(u => <option key={u._id} value={u._id}>{u.name} ({u.email})</option>)}
+                </select>
+                <button className="btn btn-secondary" onClick={handleAddMember}>Invite</button>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {members.map(m => (
+                  <span key={m._id} style={{ background: 'var(--primary)', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>
+                    {m.user?.name} ({m.role})
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {tasks
               .filter(t => selectedProject ? t.projectId?._id === selectedProject : true)
@@ -124,7 +167,7 @@ const Projects = () => {
                     value={t.status} 
                     onChange={(e) => handleUpdateTaskStatus(t._id, e.target.value)}
                     style={{ padding: '6px 12px', fontSize: '12px' }}
-                    disabled={user.role === 'NORMAL' && t.assigneeId?._id !== user._id}
+                    disabled={selectedProjObj?.myRole === 'MEMBER' && t.assigneeId?._id !== user._id}
                   >
                     <option value="pending">Pending</option>
                     <option value="in progress">In Progress</option>
@@ -148,7 +191,7 @@ const Projects = () => {
       {isTaskModalOpen && selectedProject && (
         <TaskModal 
           projectId={selectedProject} 
-          users={users} 
+          users={members.map(m => m.user).filter(Boolean)} 
           onClose={() => setIsTaskModalOpen(false)} 
           onRefresh={fetchData} 
         />
